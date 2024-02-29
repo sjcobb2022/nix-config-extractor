@@ -23,16 +23,13 @@ jobs:
       - name: Cache build artifacts
         uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - name: Declare Variables 
+      - name: Declare Variables
         shell: bash
         run: |
-          echo "sha_short=$(git rev-parse --short $(/usr/bin/git log -1 --format='%H') )" >> "$GITHUB_ENV"
-          echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> "$GITHUB_ENV"
+          echo "sha=$(/usr/bin/git log -1 --format='%H')" >> "$GITHUB_ENV"
 
-      - name: Another step
-        run: |
-          echo "Branch: ${{ env.branch }}"
-          echo "Sha: ${{ env.sha_short }}"
+      - name: List
+        run: ls -a
 
       - name: Echo Test Key for Caching
         run: |
@@ -41,4 +38,5 @@ jobs:
       - name: Setup Cache for Nix
         uses: actions/cache@v4
         with:
+          path: ./
           key: ${{ runner.os }}-nix-${{ github.events.inputs.git_url }}-${{ env.sha_short }}
