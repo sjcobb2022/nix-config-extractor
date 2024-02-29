@@ -7,6 +7,9 @@ on:
       git_url:
         description: "The URL of the git repository to extract the Home Manager configuration from. E.g. sjcobb2022/nixos-config"
         required: true
+      flake:
+        description: "The flake to extract from the repository. E.g. sjcobb@slaptop"
+        required: true
 
 jobs:
   extract:
@@ -29,8 +32,10 @@ jobs:
           echo "sha=$(git rev-parse $(/usr/bin/git log -1 --format='%H') )" >> "$GITHUB_ENV"
           echo "git_url=${{ github.event.inputs.git_url }}" >> "$GITHUB_ENV"
 
+      - name: Home Manager
+        run: nix-shell -p home-manager --run "home-manager build --flake .#${{ github.event.inputs.flake }}"
       - name: Setup Cache for Nix
         uses: actions/cache@v4
         with:
-          path: ./
+          path: ./result
           key: ${{ runner.os }}-nix-${{ env.git_url }}-${{ env.sha }}
