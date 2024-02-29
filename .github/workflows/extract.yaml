@@ -17,20 +17,16 @@ jobs:
         with:
           repository: ${{ github.event.inputs.git_url }}
 
-
       - name: Install nix
         uses: DeterminateSystems/nix-installer-action@main
 
       - name: Cache build artifacts
         uses: DeterminateSystems/magic-nix-cache-action@main
-      
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
 
-      - name: Declare some variables
+      - name: Declare Variables 
         shell: bash
         run: |
-          echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
+          echo "sha_short=$(git rev-parse --short $(/usr/bin/git log -1 --format='%H') )" >> "$GITHUB_ENV"
           echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> "$GITHUB_ENV"
 
       - name: Another step
