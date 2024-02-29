@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       git_url:
-        description: "The URL of the git repository to extract the Home Manager configuration from"
+        description: "The URL of the git repository to extract the Home Manager configuration from. E.g. sjcobb2022/nixos-config"
         required: true
 
 jobs:
@@ -27,12 +27,11 @@ jobs:
         shell: bash
         run: |
           echo "sha=$(git rev-parse $(/usr/bin/git log -1 --format='%H') )" >> "$GITHUB_ENV"
+          echo "git_url=${{ github.event.inputs.git_url }}" >> "$GITHUB_ENV"
 
       - name: Echo Test Key for Caching
         run: |
-          echo "Key: ${{ runner.os }}-nix-${{ github.events.inputs.git_url }}-${{ env.sha_short }}"
-          echo ${{ github.events.inputs.git_url }}
-          echo "${ github.events.inputs.git_url }"
+          echo "Key: ${{ runner.os }}-nix-${{ github.events.inputs.git_url }}-${{ env.sha }}"
 
       - name: Setup Cache for Nix
         uses: actions/cache@v4
