@@ -1,0 +1,46 @@
+# A workflow that is only triggered by a REST API endpoint
+# It must contain an input including a git URL
+
+on:
+  workflow_dispatch:
+    inputs:
+      git_url:
+        description: "The URL of the git repository to extract the Home Manager configuration from"
+        required: true
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: main
+          repository: ${{ github.event.inputs.git_url }}
+
+      - name: Install nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Cache build artifacts
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Declare some variables
+        shell: bash
+        run: |
+          echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
+          echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> "$GITHUB_ENV"
+
+      - name: Another step
+        run: |
+          echo "Branch: ${{ env.branch }}"
+          echo "Sha: ${{ env.sha_short }}"
+
+      - name: Echo Test Key for Caching
+        run: |
+          echo "Key: ${{ runner.os }}-nix-${{ github.events.inputs.git_url }}-${{ env.sha_short }}"
+
+      - name: Setup Cache for Nix
+        uses: actions/cache@v4
+        with:
+          path: main
+          key: ${{ runner.os }}-nix-${{ github.events.inputs.git_url }}-${{ env.sha_short }}
