@@ -28,7 +28,7 @@ jobs:
         env:
           URL: ${{ github.event.inputs.url }}
         run: |
-          nix flake metadata $URL --json | jq '.locked.rev'
+          echo "sha=$(nix flake metadata $URL --json | jq '.locked.rev')" >> $GITHUB_ENV
 
       - name: Setup Cache for Nix
         id: cache-nix
