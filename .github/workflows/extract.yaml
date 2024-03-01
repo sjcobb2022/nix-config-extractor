@@ -1,6 +1,8 @@
 # A workflow that is only triggered by a REST API endpoint
 # It must contain an input including a git URL
 
+name: extract
+
 on:
   workflow_dispatch:
     inputs:
@@ -15,6 +17,7 @@ jobs:
   extract:
     runs-on: ubuntu-latest
     steps:
+      # TODO: Change to basic git clone to support non-github platforms
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -32,11 +35,19 @@ jobs:
           echo "sha=$(git rev-parse $(/usr/bin/git log -1 --format='%H') )" >> "$GITHUB_ENV"
           echo "git_url=${{ github.event.inputs.git_url }}" >> "$GITHUB_ENV"
 
-      - name: Home Manager
-        run: nix-shell -p home-manager --run "home-manager build --flake .#${{ github.event.inputs.flake }} --option 'home.packages' 'mkForce []' "
-      
       - name: Setup Cache for Nix
+        id: cache-nix
         uses: actions/cache@v4
         with:
           path: ./result
           key: ${{ runner.os }}-nix-${{ env.git_url }}-${{ env.sha }}
+
+      - name: Home Manager
+        if: steps.cache-nix.outputs.cache-hit != 'true'
+        run: nix-shell -p home-manager --run "home-manager build --flake .#${{ github.event.inputs.flake }} --option 'home.packages' 'mkForce []' "
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }}-nix-${{ env.git_url }}-${{ env.sha }}
+          path: ./result/home-files
