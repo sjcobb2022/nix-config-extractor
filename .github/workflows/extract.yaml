@@ -41,8 +41,8 @@ jobs:
         if: steps.cache-nix.outputs.cache-hit != 'true'
         run: nix-shell -p home-manager --run "home-manager build --flake ${{ github.event.inputs.url }}#${{ github.event.inputs.flake }} --option 'home.packages' 'mkForce []' "
 
-      - name: sanitize target
-        run: echo ::set-env name=SANITIZED_URL::$(echo ${{ github.event.inputs.url }} | tr '[":<>|*?\r\n\\/]' '-')
+      - name: Sanitize URL for Artifact
+        run: echo "SANITIZED_URL=$(echo ${{ github.event.inputs.url }} | tr '[":<>|*?\r\n\\/]' '-')" >> $GITHUB_ENV
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
