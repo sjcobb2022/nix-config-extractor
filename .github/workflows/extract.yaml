@@ -20,8 +20,12 @@ jobs:
       - name: Install nix
         uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Cache build artifacts
+      - name: Cache build artifactsuses
         uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Declare Variables
+        run: |
+          echo "sha=$(nix flake metadata ${{ github.event.inputs.url }} --json | jq -r '.locked.rev')" >> $GITHUB_ENV
 
       - name: Setup Cache for Nix
         id: cache-nix
@@ -35,7 +39,7 @@ jobs:
         run: nix-shell -p home-manager --run "home-manager build --flake ${{ github.event.inputs.url }}#${{ github.event.inputs.flake }} --option 'home.packages' 'mkForce []' "
 
       - name: Sanitize URL for Artifact
-        run: echo "SANITIZED_URL=$(echo ${{ github.event.inputs.url }} | tr '[":<>|*?\r\\/]' '-')" >> $GITHUB_ENV
+        run: echo "SANITIZED_URL=$(echo ${{ github.event.inputs.url }} | tr '[":<>|*?\n\\/]' '-')" >> $GITHUB_ENV
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
