@@ -26,7 +26,7 @@ jobs:
       - name: Declare Variables
         shell: bash
         env:
-          URL: ${{ github.events.inputs.url }}
+          URL: ${{ github.event.inputs.url }}
         run: |
           echo "sha=$(nix flake metadata $URL --json | jq -r '.locked.sha')" >> "$GITHUB_ENV"
 
@@ -44,5 +44,5 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ runner.os }}-nix-${ github.events.inputs.url }}-${{ env.sha }}
+          name: ${{ runner.os }}-nix-${{ github.event.inputs.url }}-${{ env.sha }}
           path: ./result/home-files
