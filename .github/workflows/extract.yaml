@@ -21,7 +21,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@main
 
       - name: Cache build artifacts
-        uses: DeterminateSystems/magic-nix-cache-action@magic-nix-cache-action
+        uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Declare Variables
         shell: bash
