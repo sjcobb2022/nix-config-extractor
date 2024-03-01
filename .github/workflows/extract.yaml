@@ -20,15 +20,14 @@ jobs:
       - name: Install nix
         uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Cache build artifactsuses
+      - name: Cache build artifacts
         uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Declare Variables
-        shell: bash
         env:
           URL: ${{ github.event.inputs.url }}
         run: |
-          echo "sha=$(nix flake metadata $URL --json | jq -r '.locked.rev')" >> $GITHUB_ENV
+          echo "sha=$(nix flake metadata ${{ github.event.inputs.url }} --json | jq -r '.locked.rev')" >> $GITHUB_ENV
 
       - name: Setup Cache for Nix
         id: cache-nix
