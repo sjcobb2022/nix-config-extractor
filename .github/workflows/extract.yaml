@@ -1,46 +1,87 @@
 # A workflow that is only triggered by a REST API endpoint
 # It must contain an input including a git URL
 
-name: extract
+# name: extract
+#
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       url:
+#         description: "The URL of the git repository to extract the Home Manager configuration from. E.g. github:sjcobb2022/nixos-config"
+#         required: true
+#       flake:
+#         description: "The flake to extract from the repository. E.g. sjcobb@slaptop"
+#         required: true
+#
+# jobs:
+#   extract:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Install nix
+#         uses: DeterminateSystems/nix-installer-action@main
+#
+#       - name: Cache build artifacts
+#         uses: DeterminateSystems/magic-nix-cache-action@main
+#
+#        - name: Declare Variables
+#          shell: bash
+#          run: |
+#            echo "sha=$(nix flake metadata ${ github.events.inputs.url } --json | jq -r '.locked.sha')" >> "$GITHUB_ENV"
+#       
+#        - name: Setup Cache for Nix
+#          id: cache-nix
+#          uses: actions/cache@v4
+#          with:
+#            path: ./result
+#            key: ${{ runner.os }}-nix-${{ github.event.inputs.url }}-${{ env.sha }}
+#       
+#        - name: Home Manager Build
+#          if: steps.cache-nix.outputs.cache-hit != 'true'
+#          run: nix-shell -p home-manager --run "home-manager build --flake ${{ github.event.inputs.url }}#${{ github.event.inputs.flake }} --option 'home.packages' 'mkForce []' "
+#
+#        - name: Upload Artifacts
+#          uses: actions/upload-artifact@v4
+#          with:
+#            name: ${{ runner.os }}-nix-${{ env.git_url }}-${{ env.sha }}
+#            path: ./result/home-files
+
+# A workflow that is only triggered by a REST API endpoint
+# It must contain an input including a git URL
 
 on:
   workflow_dispatch:
     inputs:
-      url:
-        description: "The URL of the git repository to extract the Home Manager configuration from. E.g. github:sjcobb2022/nixos-config"
-        required: true
-      flake:
-        description: "The flake to extract from the repository. E.g. sjcobb@slaptop"
-        required: true
+       url:
+         description: "The URL of the git repository to extract the Home Manager configuration from. E.g. github:sjcobb2022/nixos-config"
+         required: true
+       flake:
+         description: "The flake to extract from the repository. E.g. sjcobb@slaptop"
+         required: true
 
 jobs:
   extract:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.inputs.url }}
+
       - name: Install nix
         uses: DeterminateSystems/nix-installer-action@main
 
       - name: Cache build artifacts
         uses: DeterminateSystems/magic-nix-cache-action@main
 
-      # - name: Declare Variables
-      #   shell: bash
-      #   run: |
-      #     echo "sha=$(nix flake metadata ${ github.events.inputs.url } --json | jq -r '.locked.sha')" >> "$GITHUB_ENV"
-      #
-      # - name: Setup Cache for Nix
-      #   id: cache-nix
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ./result
-      #     key: ${{ runner.os }}-nix-${{ github.event.inputs.url }}-${{ env.sha }}
-      #
-      # - name: Home Manager Build
-      #   if: steps.cache-nix.outputs.cache-hit != 'true'
-      #   run: nix-shell -p home-manager --run "home-manager build --flake ${{ github.event.inputs.url }}#${{ github.event.inputs.flake }} --option 'home.packages' 'mkForce []' "
-
-      # - name: Upload Artifacts
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ runner.os }}-nix-${{ env.git_url }}-${{ env.sha }}
-      #     path: ./result/home-files
+      - name: Declare Variables 
+        shell: bash
+        run: |
+          echo "sha_short=$(git rev-parse --short $(/usr/bin/git log -1 --format='%H') )" >> "$GITHUB_ENV"
+      
+      - name: Echo Test Key for Caching
+        run: |
+          echo "Key: ${{ runner.os }}-nix-${{ github.events.inputs.url }}-${{ env.sha_short }}"
+      - name: Setup Cache for Nix
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-nix-${{ github.events.inputs.git_url }}-${{ env.sha_short }}
