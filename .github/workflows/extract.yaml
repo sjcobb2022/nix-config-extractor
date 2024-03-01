@@ -36,4 +36,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ runner.os }}-nix-${{ env.url }}-${{ env.sha }}
-          path: ./result/home-files
+          path: ./result/home-files/.config
