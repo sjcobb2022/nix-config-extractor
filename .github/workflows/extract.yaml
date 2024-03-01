@@ -6,7 +6,7 @@ name: extract
 on:
   workflow_dispatch:
     inputs:
-      git_url:
+      url:
         description: "The URL of the git repository to extract the Home Manager configuration from. E.g. sjcobb2022/nixos-config"
         required: true
       flake:
@@ -17,34 +17,27 @@ jobs:
   extract:
     runs-on: ubuntu-latest
     steps:
-      # TODO: Change to basic git clone to support non-github platforms
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.event.inputs.git_url }}
-
       - name: Install nix
         uses: DeterminateSystems/nix-installer-action@main
 
       - name: Cache build artifacts
-        uses: DeterminateSystems/magic-nix-cache-action@main
+        uses: DeterminateSystems/magic-nix-cache-action@magic-nix-cache-action
 
       - name: Declare Variables
         shell: bash
         run: |
-          echo "sha=$(git rev-parse $(/usr/bin/git log -1 --format='%H') )" >> "$GITHUB_ENV"
-          echo "git_url=${{ github.event.inputs.git_url }}" >> "$GITHUB_ENV"
+          echo "sha=$(nix flake metadata ${{ github.events.inputs.url }} --json | jq -r '.locked.sha')" >> "$GITHUB_ENV"
 
       - name: Setup Cache for Nix
         id: cache-nix
         uses: actions/cache@v4
         with:
           path: ./result
-          key: ${{ runner.os }}-nix-${{ env.git_url }}-${{ env.sha }}
+          key: ${{ runner.os }}-nix-${{ github.event.inputs.url }}-${{ env.sha }}
 
-      - name: Home Manager
+      - name: Home Manager Build
         if: steps.cache-nix.outputs.cache-hit != 'true'
-        run: nix-shell -p home-manager --run "home-manager build --flake .#${{ github.event.inputs.flake }} --option 'home.packages' 'mkForce []' "
+        run: nix-shell -p home-manager --run "home-manager build --flake ${{ github.event.inputs.url }}${{ github.event.inputs.flake }} --option 'home.packages' 'mkForce []' "
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
