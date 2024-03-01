@@ -33,7 +33,7 @@ jobs:
           echo "git_url=${{ github.event.inputs.git_url }}" >> "$GITHUB_ENV"
 
       - name: Home Manager
-        run: nix-shell -p home-manager --run "home-manager build --flake .#${{ github.event.inputs.flake }} --option 'home.packages' 'lib.mkForce []' "
+        run: nix-shell -p home-manager --run "home-manager build --flake .#${{ github.event.inputs.flake }} --option 'home.packages' 'mkForce []' "
       
       - name: Setup Cache for Nix
         uses: actions/cache@v4
