@@ -31,8 +31,11 @@ jobs:
         id: cache-nix
         uses: actions/cache@v4
         with:
-          path: result
+          path: result/*
           key: ${{ runner.os }}-nix-${{ github.event.inputs.url }}-${{ env.sha }}
+
+      - name: List
+        run: ls
 
       - name: Home Manager Build
         if: steps.cache-nix.outputs.cache-hit != 'true'
