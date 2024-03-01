@@ -31,12 +31,18 @@ jobs:
         id: cache-nix
         uses: actions/cache@v4
         with:
-          path: ./result
+          path: result
           key: ${{ runner.os }}-nix-${{ github.event.inputs.url }}-${{ env.sha }}
 
       - name: Home Manager Build
         if: steps.cache-nix.outputs.cache-hit != 'true'
         run: nix-shell -p home-manager --run "home-manager build --flake ${{ github.event.inputs.url }}#${{ github.event.inputs.flake }} --option 'home.packages' 'mkForce []' "
+
+      - name: List
+        run: ls
+
+      - name: List result
+        run: ls result
 
       - name: Sanitize URL for Artifact
         run: echo "SANITIZED_URL=$(echo ${{ github.event.inputs.url }} | tr '[":<>|*?\r\\/]' '-')" >> $GITHUB_ENV
