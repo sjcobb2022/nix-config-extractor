@@ -26,7 +26,7 @@ jobs:
       - name: Declare Variables
         shell: bash
         run: |
-          echo "sha=$(nix flake metadata ${{ github.events.inputs.url }} --json | jq -r '.locked.sha')" >> "$GITHUB_ENV"
+          echo "sha=$(nix flake metadata ${ github.events.inputs.url } --json | jq -r '.locked.sha')" >> "$GITHUB_ENV"
 
       - name: Setup Cache for Nix
         id: cache-nix
@@ -37,10 +37,10 @@ jobs:
 
       - name: Home Manager Build
         if: steps.cache-nix.outputs.cache-hit != 'true'
-        run: nix-shell -p home-manager --run "home-manager build --flake ${{ github.event.inputs.url }}${{ github.event.inputs.flake }} --option 'home.packages' 'mkForce []' "
+        run: nix-shell -p home-manager --run "home-manager build --flake ${{ github.event.inputs.url }}#${{ github.event.inputs.flake }} --option 'home.packages' 'mkForce []' "
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ runner.os }}-nix-${{ env.git_url }}-${{ env.sha }}
-          path: ./result/home-files
+      # - name: Upload Artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ runner.os }}-nix-${{ env.git_url }}-${{ env.sha }}
+      #     path: ./result/home-files
