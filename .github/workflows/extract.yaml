@@ -22,18 +22,24 @@ jobs:
 
       - name: Cache build artifacts
         uses: DeterminateSystems/magic-nix-cache-action@main
-
-      - name: Home Manager Build
-        if: steps.cache-nix.outputs.cache-hit != 'true'
-        run: nix-shell -p home-manager --run "home-manager build --flake ${{ github.event.inputs.url }}#${{ github.event.inputs.flake }} --option 'home.packages' 'mkForce []' "
-
+      
       - name: Declare Variables
         run: |
           echo "sha=$(nix flake metadata ${{ github.event.inputs.url }} --json | jq -r '.locked.rev')" >> $GITHUB_ENV
           echo "url=$(echo ${{ github.event.inputs.url }} | tr '[":<>|*?\r\\/]' '-')" >> $GITHUB_ENV
 
+      uses: xSAVIKx/artifact-exists-action@v0
+      id: check_artifact_exists
+      with:
+        name: nix-${{ env.url }}-${{ env.sha }}
+
+      - name: Home Manager Build
+        if: ${{ steps.check_artifact_exists.outputs.exists != 'true' && steps.cache-nix.outputs.cache-hit != 'true' }}
+        run: nix-shell -p home-manager --run "home-manager build --flake ${{ github.event.inputs.url }}#${{ github.event.inputs.flake }} --option 'home.packages' 'mkForce []' "
+
       - name: Upload Artifacts
+        if: ${{ steps.check_artifact_exists.outputs.exists != 'true' && steps.cache-nix.outputs.cache-hit != 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ runner.os }}-nix-${{ env.url }}-${{ env.sha }}
+          name: nix-${{ env.url }}-${{ env.sha }}
           path: ./result/home-files/.config
